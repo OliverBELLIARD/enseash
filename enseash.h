@@ -13,9 +13,13 @@
 #include <unistd.h>
 
 #define BUFSIZE 512
+#define DEBUG 0
 
 #define MESSAGE_BVN "$ ./enseash\nBienvenue dans le Shell ENSEA.\nPour quitter, tapez 'exit'.\n"
-#define PROMPT "enseash "
+#define PROMPT "enseash % "
 #define MESSAGE_SORTIE "Merci pour avoir utilisé ce shell. Bye bye...\n"
+
+//void eval();
+void print(char *);
 
 #endif //ENSEASH_ENSEASH_H
