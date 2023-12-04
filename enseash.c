@@ -2,7 +2,7 @@
 // Created by oliver on 01/12/23.
 //
 
-#include <sys/wait.h>
+
 #include "enseash.h"
 
  /**
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     char buf[BUFSIZE];
 
     //
-    // WELCOME
+    // WELCOME MESSAGE
     //
     // To do the first question without a file:
     //write(STDOUT_FILENO, MESSAGE_BVN, strlen(MESSAGE_BVN));
@@ -34,16 +34,22 @@ int main(int argc, char *argv[]) {
 
     // We print our welcome message
     while ((ret = read(fdo_dm, buf, BUFSIZE)) > 0) {
-        if (write(STDOUT_FILENO, buf, ret) == -1) {
+        if (write(STDOUT_FILENO, buf, ret) == -1) { // Error management
             perror("write"); exit(EXIT_FAILURE);
         }
     }
 
     close(fdo_dm);
 
+    //
+    // MAIN LOOP
+    //
+    // read function wait explanation:
+    // https://stackoverflow.com/questions/12126239/read-not-waiting-for-input
     while ((ret = read(STDIN_FILENO,buf,BUFSIZE)) > 0) {
-        if (ret == -1) {
-            perror("read"); exit(EXIT_FAILURE);
+        if (ret == -1) { // Error management
+            perror("read");
+            exit(EXIT_FAILURE);
         }
 
         buf[ret-1] = 0; // We reset the unused values of the buffer
@@ -64,15 +70,16 @@ int main(int argc, char *argv[]) {
  * @param string string to print.
  */
 void print(char *string) {
-    if (write(STDOUT_FILENO, string, strlen(string)) == -1) {
-        perror("write"); exit(EXIT_FAILURE);
+    if (write(STDOUT_FILENO, string, strlen(string)) == -1) { // Error management
+        perror("write");
+        exit(EXIT_FAILURE);
     }
 }
 
 /**
  * @brief Evaluates the commands.
  * @param string command to evaluate
- * @return
+ * @return 
  */
 int eval(char *string) {
     if (!strcmp(string, "exit")) {
@@ -81,12 +88,19 @@ int eval(char *string) {
 
     pid_t pid = fork();
 
-    if (pid == 0) {
+    if (pid == -1) { // Error management
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
         // Child pid
         if (DEBUG) printf("My PID is %i my parent pid is %i\n", getpid(),	getppid());
 
         // We evaluate the current user input
-        execlp(string, string, NULL);
+        if (execlp(string, string, NULL) == -1) {
+            // Error management
+            perror("execlp");
+            exit(EXIT_FAILURE);
+        }
         exit(EXIT_SUCCESS);
     } else if (pid>0){
         // Parent pid

@@ -75,10 +75,6 @@ void print(char *string) {
  * @return
  */
 int eval(char *string) {
-    if (!strcmp(string, "exit")) {
-        return EXIT_FAILURE;
-    }
-
     pid_t pid = fork();
 
     if (pid == 0) {
