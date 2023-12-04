@@ -124,9 +124,9 @@ int eval(char *command) {
 
         // We evaluate the current user input
         if (execvp(args[0], args) == -1) {
-            // Error management (in debug mode only)
+            // Error management
+            char error_msg[BUFSIZE];
             if (DEBUG) {
-                char error_msg[BUFSIZE];
                 sprintf(error_msg, "execlp: %s", command);
                 perror(error_msg);
             }

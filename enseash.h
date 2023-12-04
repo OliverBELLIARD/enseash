@@ -13,8 +13,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define BUFSIZE 512
-#define DEBUG 0
+#define BUFSIZE 512 // Size of our buffers storing inputs
+#define DEBUG 0     // Enables debug mode
 
 #define MESSAGE_BVN "$ ./enseash\nBienvenue dans le Shell ENSEA.\nPour quitter, tapez 'exit'.\n"
 #define PROMPT "enseash % "

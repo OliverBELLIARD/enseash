@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
         }
 
         buf[ret-1] = 0; // We reset the unused values of the buffer
-
         //
         // EVAL
         //
@@ -93,9 +92,6 @@ int eval(char *command) {
     struct timespec end;
     double duration;
 
-    char *args[BUFSIZE];
-    int arg_count = 0;
-
     if (!strcmp(command, "exit")) {
         return EXIT_FAILURE;
     }
@@ -113,20 +109,11 @@ int eval(char *command) {
         // Child pid
         if (DEBUG) printf("My PID is %i my parent pid is %i\n", getpid(),	getppid());
 
-        // We tokenize the input command
-        char *token = strtok(command, " \t\n"); // Tokenize using space, tab, and newline as delimiters
-        while (token != NULL) {
-            args[arg_count++] = token;
-            token = strtok(NULL, " \t\n");
-        }
-
-        args[arg_count] = NULL; // Null-terminate the arguments array
-
         // We evaluate the current user input
-        if (execvp(args[0], args) == -1) {
-            // Error management (in debug mode only)
+        if (execlp(command, command, NULL) == -1) {
+            // Error management
+            char error_msg[BUFSIZE];
             if (DEBUG) {
-                char error_msg[BUFSIZE];
                 sprintf(error_msg, "execlp: %s", command);
                 perror(error_msg);
             }
