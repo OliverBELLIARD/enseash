@@ -46,6 +46,10 @@ int main(int argc, char *argv[]) {
     close(fdo_dm);
 
     //
+    // PROMPT
+    //
+     print(PROMPT);
+    //
     // MAIN LOOP
     //
     // read function wait explanation:
@@ -116,7 +120,31 @@ int eval(char *command) {
         // We tokenize the input command
         char *token = strtok(command, " \t\n"); // Tokenize using space, tab, and newline as delimiters
         while (token != NULL) {
-            args[arg_count++] = token;
+            if (strcmp(token, "<") == 0) {
+                // Input redirection
+                token = strtok(NULL, " \t\n"); // Get the next token (filename for input)
+                int fd_in = open(token, O_RDONLY);
+                if (fd_in == -1) {
+                    perror("open");
+                    exit(EXIT_FAILURE);
+                }
+                dup2(fd_in, STDIN_FILENO);
+                close(fd_in);
+            } else if (strcmp(token, ">") == 0) {
+                // Output redirection
+                token = strtok(NULL, " \t\n"); // Get the next token (filename for output)
+                int fd_out = open(token, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (fd_out == -1) {
+                    perror("open");
+                    exit(EXIT_FAILURE);
+                }
+                dup2(fd_out, STDOUT_FILENO);
+                close(fd_out);
+            } else {
+                // Normal argument
+                args[arg_count++] = token;
+            }
+
             token = strtok(NULL, " \t\n");
         }
 
