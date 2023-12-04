@@ -19,7 +19,7 @@
 #define PROMPT "enseash % "
 #define MESSAGE_SORTIE "Merci pour avoir utilisé ce shell. Bye bye...\n"
 
-//void eval();
+int eval(char *);
 void print(char *);
 
-#endif //ENSEASH_ENSEASH_H
+#endif ENSEASH_ENSEASH_H

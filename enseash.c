@@ -5,11 +5,15 @@
 #include <sys/wait.h>
 #include "enseash.h"
 
-/*******************************************************
- * Info:
+ /**
+  * @brief Main program.
+  * Info:
  * - To build code in terminal: gcc enseash.c enseash.h -o enseash
  * - To run code in terminal: ./enseash
- */
+  * @param argc number of passed arguments.
+  * @param argv passed arguments starting with filename.
+  * @return
+  */
 int main(int argc, char *argv[]) {
     int fdo_dm;
     ssize_t ret;
@@ -46,28 +50,8 @@ int main(int argc, char *argv[]) {
         //
         // EVAL
         //
-        if (!strcmp(buf, "exit")) {
+        if (eval(buf)) {
             exit(EXIT_SUCCESS);
-        }
-
-        pid_t pid = fork();
-
-        if (pid == 0) {
-            // Child pid
-            if (DEBUG) printf("My PID is %i my parent pid is %i\n", getpid(),	getppid());
-
-            // We evaluate the current user input
-            execlp(buf, buf, NULL);
-            exit(EXIT_SUCCESS);
-        } else if (pid>0){
-            // Parent pid
-            if (DEBUG) printf("My PID is %i my child pid is %i\n", getpid(), pid);
-
-            wait(NULL); // We wait for the child to finish its process
-            //
-            // PROMPT
-            //
-            print(PROMPT);
         }
     }
 
@@ -75,12 +59,45 @@ int main(int argc, char *argv[]) {
 }
 
 /**
- * Prints the String passed using the write function.
+ * @brief Prints the String passed using the write function.
  * Has error management.
- * @param string
+ * @param string string to print.
  */
 void print(char *string) {
     if (write(STDOUT_FILENO, string, strlen(string)) == -1) {
         perror("write"); exit(EXIT_FAILURE);
     }
+}
+
+/**
+ * @brief Evaluates the commands.
+ * @param string command to evaluate
+ * @return
+ */
+int eval(char *string) {
+    if (!strcmp(string, "exit")) {
+        return EXIT_FAILURE;
+    }
+
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        // Child pid
+        if (DEBUG) printf("My PID is %i my parent pid is %i\n", getpid(),	getppid());
+
+        // We evaluate the current user input
+        execlp(string, string, NULL);
+        exit(EXIT_SUCCESS);
+    } else if (pid>0){
+        // Parent pid
+        if (DEBUG) printf("My PID is %i my child pid is %i\n", getpid(), pid);
+
+        wait(NULL); // We wait for the child to finish its process
+        //
+        // PROMPT
+        //
+        print(PROMPT);
+    }
+
+    return EXIT_SUCCESS;
 }
