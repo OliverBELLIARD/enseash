@@ -20,8 +20,8 @@
 #define PROMPT "enseash % "
 #define PROMPT_EXIT "enseash [exit:%d] %% "
 #define PROMPT_SIGN "enseash [sign:%d] %% "
-#define PROMPT_EXIT_TIME "enseash [exit:%d|%dms] %% "
-#define PROMPT_SIGN_TIME "enseash [sign:%d|%dms] %% "
+#define PROMPT_EXIT_TIME "enseash [exit:%d|%0.2fms] %% "
+#define PROMPT_SIGN_TIME "enseash [sign:%d|%0.2fms] %% "
 
 #define MESSAGE_SORTIE "Merci pour avoir utilisé ce shell. Bye bye...\n"
 

@@ -2,8 +2,6 @@
 // Created by oliver on 01/12/23.
 //
 
-#include <bits/time.h>
-#include <time.h>
 #include "enseash.h"
 
  /**
@@ -88,18 +86,11 @@ void print(char *string) {
 int eval(char *string) {
     int status;
     char prompt[BUFSIZE];
-    struct timespec start;
-    struct timespec end;
-    double duration;
 
     if (!strcmp(string, "exit")) {
         return EXIT_FAILURE;
     }
 
-    // We start our pid timer
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
-    // We create a child pid
     pid_t pid = fork();
 
     if (pid == -1) { // Error management
@@ -122,12 +113,6 @@ int eval(char *string) {
         if (DEBUG) printf("My PID is %i my child pid is %i\n", getpid(), pid);
 
         //
-        // TIME
-        //
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        duration = (end.tv_sec - start.tv_sec)/1e3 + (end.tv_nsec - start.tv_nsec)/1e6;
-
-        //
         // PROMPT
         //
         // We wait for the child to finish its process, and we get the wait status
@@ -138,10 +123,10 @@ int eval(char *string) {
         } else {
             if (WIFEXITED(status)) {
                 // We add the exit status to the prompt
-                sprintf(prompt, PROMPT_EXIT_TIME, WIFEXITED(status), duration);
+                sprintf(prompt, PROMPT_EXIT, WIFEXITED(status));
             } else if (WIFSIGNALED(status)) {
                 // We add the signal status to the prompt
-                sprintf(prompt, PROMPT_SIGN_TIME, WTERMSIG(status), duration);
+                sprintf(prompt, PROMPT_SIGN, WTERMSIG(status));
             }
         }
 
