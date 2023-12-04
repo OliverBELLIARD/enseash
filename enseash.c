@@ -81,18 +81,18 @@ void print(char *string) {
 }
 
 /**
- * @brief Evaluates the commands.
- * @param string command to evaluate
+ * @brief Evaluates the commands and updates the prompt.
+ * @param command command to evaluate
  * @return 
  */
-int eval(char *string) {
+int eval(char *command) {
     int status;
     char prompt[BUFSIZE];
     struct timespec start;
     struct timespec end;
     double duration;
 
-    if (!strcmp(string, "exit")) {
+    if (!strcmp(command, "exit")) {
         return EXIT_FAILURE;
     }
 
@@ -110,9 +110,11 @@ int eval(char *string) {
         if (DEBUG) printf("My PID is %i my parent pid is %i\n", getpid(),	getppid());
 
         // We evaluate the current user input
-        if (execlp(string, string, NULL) == -1) {
+        if (execlp(command, command, NULL) == -1) {
             // Error management
-            perror("execlp");
+            char error_msg[BUFSIZE];
+            sprintf(error_msg, "execlp: %s", command);
+            perror(error_msg);
             exit(EXIT_FAILURE);
         }
         // We kill the child
@@ -124,7 +126,9 @@ int eval(char *string) {
         //
         // TIME
         //
+        // We get the time when the child exited
         clock_gettime(CLOCK_MONOTONIC, &end);
+        // duration = seconds + nanoseconds
         duration = (end.tv_sec - start.tv_sec)/1e3 + (end.tv_nsec - start.tv_nsec)/1e6;
 
         //
