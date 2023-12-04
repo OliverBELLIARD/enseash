@@ -2,7 +2,6 @@
 // Created by oliver on 01/12/23.
 //
 
-
 #include "enseash.h"
 
  /**
@@ -29,13 +28,17 @@ int main(int argc, char *argv[]) {
 
     // We open our file containing our welcome message
     if ((fdo_dm = open(path_default_messages, O_RDONLY)) == -1){
-        perror("open"); exit(EXIT_FAILURE);
+        // Error management
+        perror("open");
+        exit(EXIT_FAILURE);
     }
 
     // We print our welcome message
     while ((ret = read(fdo_dm, buf, BUFSIZE)) > 0) {
-        if (write(STDOUT_FILENO, buf, ret) == -1) { // Error management
-            perror("write"); exit(EXIT_FAILURE);
+        if (write(STDOUT_FILENO, buf, ret) == -1) {
+            // Error management
+            perror("write");
+            exit(EXIT_FAILURE);
         }
     }
 
