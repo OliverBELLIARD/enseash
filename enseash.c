@@ -16,7 +16,6 @@
 int main(int argc, char *argv[]) {
     int fdo_dm;
     ssize_t ret;
-
     char *path_default_messages = "../default_messages.txt";
     char buf[BUFSIZE];
 
@@ -85,6 +84,9 @@ void print(char *string) {
  * @return 
  */
 int eval(char *string) {
+    int status;
+    char prompt[BUFSIZE];
+
     if (!strcmp(string, "exit")) {
         return EXIT_FAILURE;
     }
@@ -104,16 +106,31 @@ int eval(char *string) {
             perror("execlp");
             exit(EXIT_FAILURE);
         }
+        // We kill the child
         exit(EXIT_SUCCESS);
     } else if (pid>0){
         // Parent pid
         if (DEBUG) printf("My PID is %i my child pid is %i\n", getpid(), pid);
 
-        wait(NULL); // We wait for the child to finish its process
         //
         // PROMPT
         //
-        print(PROMPT);
+        // We wait for the child to finish its process, and we get the wait status
+        if ((pid = wait(&status)) == -1) {
+            // Error management
+            perror("wait status");
+            exit(EXIT_FAILURE);
+        } else {
+            if (WIFEXITED(status)) {
+                // We add the exit status to the prompt
+                sprintf(prompt, PROMPT_EXIT, WIFEXITED(status));
+            } else if (WIFSIGNALED(status)) {
+                // We add the signal status to the prompt
+                sprintf(prompt, PROMPT_SIGN, WTERMSIG(status));
+            }
+        }
+
+        print(prompt);
     }
 
     return EXIT_SUCCESS;
