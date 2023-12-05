@@ -2,6 +2,9 @@
 // Created by oliver on 01/12/23.
 //
 
+//
+// INCLUDES
+//
 #ifndef ENSEASH_ENSEASH_H
 #define ENSEASH_ENSEASH_H
 
@@ -15,6 +18,9 @@
 #include <bits/time.h>
 #include <time.h>
 
+//
+// DEFINES
+//
 #define BUFSIZE 512 // Size of our buffers storing inputs
 #define DEBUG 0     // Enables debug mode
 
@@ -31,12 +37,19 @@
 // Maximum number of background processes
 #define MAX_BACKGROUND_PROCESSES 10
 
+//
+// STRUCTS
+//
+// Structure to store background processes data
 typedef struct {
     pid_t pid;                   // Process ID
     int number;                  // Process number
     char command[BUFSIZE];       // Command associated with the process
 } BackgroundProcess;
 
+//
+// PROTOTYPES
+//
 int eval(char *);
 void print(char *);
 ssize_t read_command(char *);
