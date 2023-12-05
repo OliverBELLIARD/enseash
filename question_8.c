@@ -2,26 +2,19 @@
 // Created by oliver on 01/12/23.
 //
 
-//
-// INCLUDES
-//
+#include <bits/time.h>
+#include <time.h>
 #include "enseash.h"
 
-//
-// GLOBAL VARIABLES
-//
-BackgroundProcess background_processes[MAX_BACKGROUND_PROCESSES];
-int background_process_count = 0;
-
-/**
- * @brief Main program.
- * Info:
+ /**
+  * @brief Main program.
+  * Info:
  * - To build code in terminal: gcc enseash.c enseash.h -o enseash
  * - To run code in terminal: ./enseash
- * @param argc number of passed arguments.
- * @param argv passed arguments starting with filename.
- * @return
- */
+  * @param argc number of passed arguments.
+  * @param argv passed arguments starting with filename.
+  * @return
+  */
 int main(int argc, char *argv[]) {
     int fdo_dm;
     ssize_t ret;
@@ -55,24 +48,19 @@ int main(int argc, char *argv[]) {
     //
     // PROMPT
     //
-    print(PROMPT);
-
+     print(PROMPT);
     //
     // MAIN LOOP
     //
-    while (1) {
-        ret = read_command(buf);
-
+    // read function wait explanation:
+    // https://stackoverflow.com/questions/12126239/read-not-waiting-for-input
+    while ((ret = read(STDIN_FILENO,buf,BUFSIZE)) > 0) {
         if (ret == -1) { // Error management
             perror("read");
             exit(EXIT_FAILURE);
         }
-        if (ret == 0) {
-            // No input, continue to the next iteration
-            continue;
-        }
 
-        buf[ret - 1] = '\0'; // We reset the unused values of the buffer
+        buf[ret-1] = '\0'; // We reset the unused values of the buffer
 
         //
         // EVAL
@@ -80,12 +68,9 @@ int main(int argc, char *argv[]) {
         if (eval(buf)) {
             exit(EXIT_SUCCESS);
         }
-
-        // Check for ended background processes
-        check_background_processes();
     }
 
-    return EXIT_SUCCESS;
+   return EXIT_SUCCESS;
 }
 
 /**
@@ -98,16 +83,6 @@ void print(char *string) {
         perror("write");
         exit(EXIT_FAILURE);
     }
-}
-
-/**
- * @brief Reads a command from the user.
- * @param buf buffer to store the command.
- * @return number of bytes read.
- */
-ssize_t read_command(char *buf) {
-    // read function explanation: https://stackoverflow.com/questions/12126239/read-not-waiting-for-input
-    return read(STDIN_FILENO, buf, BUFSIZE);
 }
 
 /**
@@ -259,12 +234,8 @@ int eval(char *command) {
         // Parent pid
         if (DEBUG) printf("My PID is %i my child pid is %i\n", getpid(), pid);
 
-        // If the command ends with '&', it's a background process
-        if (command[strlen(command) - 1] == '&') {
-            command[strlen(command) - 1] = '\0'; // Remove the '&'
-            launch_background_process(pid, command);
-            return EXIT_SUCCESS; // Return without waiting for background process
-        }
+        // Wait for all child processes to finish
+        while (wait(NULL) > 0);
 
         //
         // TIME
@@ -274,88 +245,24 @@ int eval(char *command) {
         // duration = seconds + nanoseconds
         duration = (end.tv_sec - start.tv_sec) / 1e3 + (end.tv_nsec - start.tv_nsec) / 1e6;
 
-        // Wait for all child processes to finish
-        while (waitpid(pid, &status, WUNTRACED | WCONTINUED) > 0) {
-            if (WIFEXITED(status)) {
-                // We add the exit status to the prompt
-                sprintf(prompt, PROMPT_EXIT_TIME, WEXITSTATUS(status), duration);
-            } else if (WIFSIGNALED(status)) {
-                // We add the signal status to the prompt
-                sprintf(prompt, PROMPT_SIGN_TIME, WTERMSIG(status), duration);
-            } else if (WIFSTOPPED(status)) {
-                // Process has been stopped
-                sprintf(prompt, "Process stopped\n");
-            } else if (WIFCONTINUED(status)) {
-                // Process has been resumed
-                sprintf(prompt, "Process resumed\n");
-            }
-
-            print(prompt);
+        //
+        // PROMPT
+        //
+        // We update the prompt after all child processes finish
+        if (WIFEXITED(status)) {
+            // We add the exit status to the prompt
+            sprintf(prompt, PROMPT_EXIT_TIME, WIFEXITED(status), duration);
+        } else if (WIFSIGNALED(status)) {
+            // We add the signal status to the prompt
+            sprintf(prompt, PROMPT_SIGN_TIME, WTERMSIG(status), duration);
+        } else {
+            // By default, we add only the duration of the last command to the prompt
+            sprintf(prompt, PROMPT_EXIT_TIME, WIFEXITED(status), duration);
         }
+
+        print(prompt);
     }
 
     return EXIT_SUCCESS;
 }
 
-/**
- * @brief Launches a background process.
- * @param pid PID of the background process.
- * @param command Command associated with the background process.
- */
-void launch_background_process(pid_t pid, char *command) {
-    if (background_process_count >= MAX_BACKGROUND_PROCESSES) {
-        fprintf(stderr, "Maximum number of background processes reached.\n");
-        return;
-    }
-
-    BackgroundProcess *background_process = &background_processes[background_process_count];
-    background_process->pid = pid;
-    background_process->number = background_process_count + 1;
-    strncpy(background_process->command, command, BUFSIZE - 1);
-
-    printf("[%d] %d\n", background_process->number, pid);
-
-    background_process_count++;
-}
-
-/**
- * @brief Updates the information of a background process that has ended.
- * @param pid PID of the ended background process.
- * @param status Status of the ended background process.
- */
-void update_background_process(pid_t pid, int status) {
-    for (int i = 0; i < background_process_count; ++i) {
-        if (background_processes[i].pid == pid) {
-            // Background process has ended
-            printf("[%d]+ Ended: %s\n", background_processes[i].number, background_processes[i].command);
-
-            // Remove the background process from the list
-            for (int j = i; j < background_process_count - 1; ++j) {
-                background_processes[j] = background_processes[j + 1];
-            }
-
-            background_process_count--;
-
-            return;
-        }
-    }
-}
-
-/**
- * @brief Checks for ended background processes.
- */
-void check_background_processes() {
-    int status;
-    pid_t pid;
-
-    // WNOHANG indicates to waitpid not to block the program
-    pid = waitpid(-1, &status, WNOHANG);
-
-    if (pid > 0) {
-        // Background process with PID pid has ended
-        update_background_process(pid, status);
-    } else if (pid == -1) {
-        // Error while checking background processes
-        perror("waitpid");
-    }
-}
